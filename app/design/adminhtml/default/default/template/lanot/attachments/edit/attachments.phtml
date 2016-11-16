@@ -1,0 +1,230 @@
+<?php
+/**
+ * Attachments collection
+ *
+ * @author Lanot
+ * @see Lanot_Attachments_Block_Adminhtml_Edit_Abstract
+ */
+?>
+<?php $_entity = $this->getEntity() ?>
+<?php $_product = $this->getProduct() ?>
+<style type="text/css">
+.files-wide label.lablink {
+	width: 150px;
+	float: none;
+}
+</style>
+<div class="fieldset">        
+    <div class="grid">
+        <div class="hor-scroll">
+            <table cellspacing="0" class="data border">
+                <col />
+                <col width="1" />
+                <col width="1" />
+                <col width="1" />
+                <col width="1" />
+                <thead>
+                    <tr class="headings">
+                        <th><?php echo $this->__('Title') ?><span class="required">*</span></th>
+                        <th><?php echo $this->__('Download') ?></th>
+                        <th><?php echo $this->__('File') ?></th>
+                        <?php if(!$_entity->getStoreId()):?>
+                            <th><span class="nobr"><?php echo $this->__('Sort Order') ?></span></th>
+                            <th>&nbsp;</th>
+                        <?php endif;?>
+                    </tr>
+                </thead>
+
+                <tfoot>
+                    <tr>
+                        <td colspan=" <?php if(!$_entity->getStoreId()):?>5<?php else: ?>3<?php endif;?>" class="a-right">
+                            <?php if(!$_entity->getStoreId()):?><?php echo $this->getAddButtonHtml() ?>&nbsp;
+                            <?php endif;?>
+                        <?php echo $this->getUploadButtonHtml() ?></td>
+                    </tr>
+                </tfoot>
+
+                <tbody id="attachments_items_div">
+                </tbody>
+            </table>
+            <div><small><?php echo $this->__('Alphanumeric, dash and underscore characters are recommended for files name. Improper characters are replaced with \'_\'.')?></small></div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[>
+var attachmentItemTemplate = '<tr>'+
+'<td>'+
+	'<input type="hidden" class="__delete__" name="attachments[{{id}}][is_delete]" value="" />'+
+    '<input type="hidden" name="attachments[{{id}}][attachment_id]" value="{{attachment_id}}" />'+
+    '<input type="text" class="required-entry input-text" name="attachments[{{id}}][title]" value="{{title}}" />'+
+    '<?php echo $_entity->getStoreId()?'<br /><input type="checkbox" id="attachments_item_{{id}}_title" name="attachments[{{id}}][use_default_title]" value="1" /><label class="normal" for="attachments_item_{{id}}_title">Use Default Value</label>':'' ?>'+
+'</td>'+
+'<td>{{download_link}}</td>'+
+'<td>'+
+	'<div class="files-wide" id="row_attachments_item_{{id}}_link">'+
+		'<div class="row">'+
+			'<label for="attachments_item_{{id}}_file_type"><input type="radio" class="radio validate-one-required-by-name" id="attachments_item_{{id}}_file_type" name="attachments[{{id}}][type]" value="file"{{file_checked}} /> File:</label>'+
+                                    '<input type="hidden" class="validate-attachments-file" id="attachments_item_{{id}}_file_save" name="attachments[{{id}}][file]" value="{{file_save}}" />'+
+                                    '<?php echo $this->getBrowseButtonHtml(); ?>'+
+                                    '<?php echo $this->getDeleteButtonHtml(); ?>'+
+                                    '<div id="attachments_item_{{id}}_file" class="uploader a-left">' +
+                                        '<div id="attachments_item_{{id}}_file-old" class="file-row-info"></div>'+
+                                        '<div id="attachments_item_{{id}}_file-new" class="file-row-info new-file"></div>'+
+                                        '<div class="clear"></div>'+
+                                    '</div>'+
+		'</div>'+
+		'<div class="row">'+
+			'<label for="attachments_item_{{id}}_url_type"><input type="radio" class="radio validate-one-required-by-name" id="attachments_item_{{id}}_url_type" name="attachments[{{id}}][type]" value="url"{{url_checked}} /> URL:</label> <input type="text" class="validate-attachments-url input-text" name="attachments[{{id}}][url]" value="{{url}}" />'+
+		'</div>'+
+		'<div>'+
+			'<span id="attachments_item_{{id}}_container"></span>'+
+		'</div>'+
+		'<div>'+
+			'<?php echo $_entity->getStoreId()?'<input type="checkbox" id="attachments_item_{{id}}_link" name="attachments[{{id}}][use_default_link]" value="1" /><label class="normal lablink" for="attachments_item_{{id}}_link">Use Default Value</label>':'' ?>'+
+		'</div>'+		
+	'</div>'+
+'</td>'+
+    '<?php echo (!$_entity->getStoreId())?'<td class="a-center"><input type="text" name="attachments[{{id}}][sort_order]" value="{{sort_order}}" class="input-text sort" /></td>':'' ?>'+
+    '<?php echo (!$_entity->getStoreId())?'<td><button type="button" class="scalable delete icon-btn delete-attachments-item"><span>Delete</span></button></td>':'' ?>'+
+'</tr>';
+
+var attachmentsItems = {
+    tbody : $('attachments_items_div'),
+    templateSyntax : /(^|.|\r|\n)({{(\w+)}})/,
+    templateText : attachmentItemTemplate,
+    itemCount : 0,
+
+    add : function(data) {
+        alertAlreadyDisplayed = false;
+        this.template = new Template(this.templateText, this.templateSyntax);
+        if(!data.attachment_id) {
+            data = {};
+            data.attachment_type = 'file';
+            data.attachment_id  = 0;
+        }
+        if(!data.attachment_url) {
+            data.download_link = '<?php echo $this->__('Available after save') ?>';
+        } else {
+            data.download_link = '<a href="' + data.attachment_url +'" target="_blank"><?php echo $this->__('Download') ?></a>';
+        }
+
+        data.id = this.itemCount;
+
+        if (data.type == 'url') {
+            data.url_checked = ' checked="checked"';
+        } else if (data.type == 'file') {
+            data.file_checked = ' checked="checked"';
+        }
+
+        //add parsed row from tempalte to html block
+        Element.insert(this.tbody, {'bottom':this.template.evaluate(data)});
+
+        //Use Default Title
+        scopeTitle = $('attachments_item_' + data.id + '_title');
+        if (scopeTitle) {
+            Event.observe(scopeTitle, 'click', function(event){
+                scopeElm = $(Event.findElement(event, 'input'));
+                titleField = scopeElm.up(0).down('input[type="text"]');
+           //     titleField.disabled = scopeElm.checked;
+                if (scopeElm.checked == true) {
+                    titleField.disabled = true;
+                } else {
+                    titleField.disabled = false;
+                }
+
+            });
+        }
+
+        //set checked "Use Default Title"
+        if (!data.store_title && scopeTitle) {
+            scopeTitle.up(0).down('input[type="text"]').disabled = true;
+            scopeTitle.checked = true;
+        }
+
+        //Use Default Link
+        scopeLink = $('attachments_item_' + data.id + '_link');
+        if (scopeLink) {
+            Event.observe(scopeLink, 'click', function(event){
+                scopeElm = $(Event.findElement(event, 'input'));
+                scopeLineToogleElements(data.id, scopeElm.checked);
+            });
+        }
+
+        //set checked "Use Default Title"
+        if (!data.store_type && scopeLink) {
+            scopeLineToogleElements(data.id, true);
+            scopeLink.checked = true;
+        }
+
+        attachmentUrl = $('attachments_item_'+data.id+'_url_type');
+
+        var UploaderConfig = <?php echo $this->getConfigJson() ?>.replace(
+            /<?php echo $this->getId(); ?>/g,
+            'attachments_item_'+data.id+'_file');
+
+        if (!data.file_save) {
+            data.file_save = [];
+        }
+
+        new Lanot_Attachments.FileUploader(
+            'lanot_attachments',
+            data.id,
+            attachmentUrl.up('td').down('div.uploader'),
+            'attachments['+data.id+']',
+            data.file_save,
+            'attachments_item_'+data.id+'_file',
+            UploaderConfig
+        );
+
+        attachmentUrl.advaiceContainer = 'attachments_item_'+data.id+'_container';
+        attachmentFile = $('attachments_item_'+data.id+'_file_type');
+        attachmentFile.advaiceContainer = 'attachments_item_'+data.id+'_container';
+        $('attachments_item_'+data.id+'_file_save').advaiceContainer = 'attachments_item_'+data.id+'_container';
+
+        this.itemCount++;
+        this.bindRemoveButtons();
+    },
+    remove : function(event){
+        var element = $(Event.findElement(event, 'tr'));
+        alertAlreadyDisplayed = false;
+        if(element){
+            element.down('input[type="hidden"].__delete__').value = '1';
+            element.down('div.flex').remove();
+            element.addClassName('no-display');
+            element.addClassName('ignore-validate');
+            element.hide();
+        }
+    },
+    bindRemoveButtons : function(){
+        var buttons = $$('tbody#attachments_items_div .delete-attachments-item');
+        for(var i=0;i<buttons.length;i++){
+            if(!$(buttons[i]).binded){
+                $(buttons[i]).binded = true;
+                Event.observe(buttons[i], 'click', this.remove.bind(this));
+            }
+        }
+    }
+}
+
+attachmentsItems.bindRemoveButtons();
+if($('add_attachments_item')){
+    Event.observe('add_attachments_item', 'click', attachmentsItems.add.bind(attachmentsItems));
+}
+
+function scopeLineToogleElements(id, disabled)
+{
+    linkElementsContainer = $('row_attachments_item_' + id + '_link');
+    var inputElements = $(linkElementsContainer).select('input[type=radio], input[type=text]');
+
+    for (var i = 0; i < inputElements.length; i++) {
+        inputElements[i].disabled = disabled;
+    }
+}
+<?php foreach ($this->getAttachmentsData()as $item): ?>
+    attachmentsItems.add(<?php echo $item->toJson() ?>);
+<?php endforeach; ?>
+
+//]]>
+</script>
