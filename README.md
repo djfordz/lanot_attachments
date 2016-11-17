@@ -3,7 +3,7 @@
 
 I suggest upgrading to latest version before patching.
 
-Lanot Attachments moves a static function from Model/Attachments called `function getBasePath` and `function getBaseTmpPath` from the model to `Helper/Config.php` if you have not upgraded your version of Lanot Attachments, you will have to copy these functions to the Helper `Config.php` and remove the static reference when copying but keep the static function in the Model as well.
+If you have not upgraded your version of Lanot Attachments, you will have to add these functions to `Helper/Config.php` for this fix to work on older versions of Lanot Attachments.
 
 ~~~
 /**
