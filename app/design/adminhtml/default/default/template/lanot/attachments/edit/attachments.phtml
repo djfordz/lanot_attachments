@@ -191,7 +191,6 @@ var attachmentsItems = {
         alertAlreadyDisplayed = false;
         if(element){
             element.down('input[type="hidden"].__delete__').value = '1';
-            element.down('div.flex').remove();
             element.addClassName('no-display');
             element.addClassName('ignore-validate');
             element.hide();
