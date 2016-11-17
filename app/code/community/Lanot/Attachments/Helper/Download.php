@@ -18,27 +18,6 @@
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-class Lanot_Attachments_Block_Adminhtml_Product_Edit
-extends Lanot_Attachments_Block_Adminhtml_Abstract
+class Lanot_Attachments_Helper_Download extends Mage_Downloadable_Helper_Download
 {
-	protected $_block = 'lanot_attachments/adminhtml_product_tab';
-		
-	public function canShowTab()
-	{
-        /* @var $helper Lanot_Attachments_Helper_Admin */
-        $helper = Mage::helper('lanot_attachments/admin');
-        $isAllowed = $helper->isActionAllowed('manage_attachments');
-
-		$setId = false;
-		$product = Mage::registry('current_product');
-		
-		if ($product) {
-			$setId = $product->getAttributeSetId();
-		}		
-		if (!$setId) { 
-			$setId = $this->getRequest()->getParam('set', null);
-		}
-				
-		return ($setId && $isAllowed) ? true : false;
-	}	
 }
